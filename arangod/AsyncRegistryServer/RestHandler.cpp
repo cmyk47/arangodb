@@ -25,7 +25,8 @@
 #include <variant>
 
 #include "Async/Registry/promise.h"
-#include "Async/Registry/stacktrace.h"
+#include "Async/Registry/stacktrace/forest.h"
+#include "Async/Registry/stacktrace/depth_first.h"
 #include "ApplicationFeatures/ApplicationServer.h"
 #include "Async/Registry/promise.h"
 #include "Async/Registry/registry_variable.h"
@@ -38,6 +39,11 @@
 #include "Network/NetworkFeature.h"
 #include "Network/RequestOptions.h"
 #include "Rest/CommonDefines.h"
+
+// TODO move stacktrace folder to server (for both src and tests)
+// TODO delete stacktrace.h
+// TODO correct test, run them
+// TODO move stacktrace creation to forest.h, independent of velocypack
 
 using namespace arangodb;
 using namespace arangodb::async_registry;
@@ -65,7 +71,7 @@ namespace {
  the larger hierarchy promise.
  **/
 auto all_undeleted_promises() -> ForestWithRoots<PromiseSnapshot> {
-  WaiterForest<PromiseSnapshot> forest;
+  Forest<PromiseSnapshot> forest;
   std::vector<Id> roots;
   registry.for_promise([&](PromiseSnapshot promise) {
     if (promise.state != State::Deleted) {
@@ -108,7 +114,7 @@ auto getStacktraceData(IndexedForestWithRoots<PromiseSnapshot> const& promises)
         break;
       }
       auto [id, hierarchy] = next.value();
-      auto data = promises.data(id);
+      auto data = promises.node(id);
       if (data != std::nullopt) {
         auto entry = Entry{.hierarchy = hierarchy, .data = data.value()};
         velocypack::serialize(builder, entry);

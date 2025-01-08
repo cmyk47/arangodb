@@ -36,47 +36,47 @@ template<typename Data>
 struct IndexedForest;
 
 template<typename Data>
-struct WaiterForest {
+struct Forest {
   auto insert(Id id, Id waiter, Data data) {
-    size_t position = _waiter.size();
+    size_t position = _parent.size();
     auto [_iter, was_inserted] = _position.emplace(id, position);
     if (was_inserted) {
-      _waiter.push_back(waiter);
-      _data.push_back(data);
+      _parent.push_back(waiter);
+      _node.push_back(data);
     }
   }
-  auto data(Id id) const -> std::optional<Data> {
+  auto node(Id id) const -> std::optional<Data> {
     auto position = _position.find(id);
     if (position == _position.end()) {
       return std::nullopt;
     }
-    return _data[position->second];
+    return _node[position->second];
   }
   auto index_by_awaitee() -> IndexedForest<Data> {
-    std::vector<std::vector<Id>> children{_waiter.size(), std::vector<Id>{}};
+    std::vector<std::vector<Id>> children{_parent.size(), std::vector<Id>{}};
     for (auto const& [id, position] : _position) {
-      auto waiter_position = _position.find(_waiter[position]);
+      auto waiter_position = _position.find(_parent[position]);
       if (waiter_position != _position.end()) {
         children[waiter_position->second].push_back(id);
       }
     }
     return IndexedForest<Data>{
-        {std::move(_position), std::move(_waiter), std::move(_data)}, children};
+        {std::move(_position), std::move(_parent), std::move(_node)}, children};
   }
 
-  bool operator==(WaiterForest<Data> const&) const = default;
+  bool operator==(Forest<Data> const&) const = default;
 
   std::unordered_map<Id, size_t>
       _position;  // at which position of the vectors _waiter and _data to find
                   // entries for Id
-  std::vector<Id> _waiter;
-  std::vector<Data> _data;
+  std::vector<Id> _parent;
+  std::vector<Data> _node;
 };
 template<typename Data>
-struct IndexedForest : WaiterForest<Data> {
+struct IndexedForest : Forest<Data> {
   auto children(Id id) const -> std::vector<Id> {
-    auto position = WaiterForest<Data>::_position.find(id);
-    if (position == WaiterForest<Data>::_position.end()) {
+    auto position = Forest<Data>::_position.find(id);
+    if (position == Forest<Data>::_position.end()) {
       return std::vector<Id>{};
     }
     return _children[position->second];
@@ -88,11 +88,11 @@ template<typename Data>
 struct IndexedForestWithRoots;
 
 template<typename Data>
-struct ForestWithRoots : WaiterForest<Data> {
-  ForestWithRoots(WaiterForest<Data> forest, std::vector<Id> roots)
-      : WaiterForest<Data>{std::move(forest)}, _roots{std::move(roots)} {}
+struct ForestWithRoots : Forest<Data> {
+  ForestWithRoots(Forest<Data> forest, std::vector<Id> roots)
+      : Forest<Data>{std::move(forest)}, _roots{std::move(roots)} {}
   auto index_by_awaitee() -> IndexedForestWithRoots<Data> {
-    return IndexedForestWithRoots{WaiterForest<Data>::index_by_awaitee(),
+    return IndexedForestWithRoots{Forest<Data>::index_by_awaitee(),
                                   std::move(_roots)};
   }
   std::vector<Id> _roots;
