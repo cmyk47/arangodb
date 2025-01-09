@@ -1,10 +1,13 @@
-FROM ubuntu:23.10
+FROM ubuntu:24.04
 MAINTAINER hackers@arangodb.com
 
 ARG arch
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3 python3-pip 7zip gdb tzdata curl wget jq binutils gcc python3-dev llvm libatomic1 net-tools && \
+    apt-get install -y --no-install-recommends python3 \
+    python3-pip 7zip gdb tzdata curl wget jq binutils gcc \
+    python3-dev llvm libatomic1 net-tools \
+    libomp-16-dev liblapack-dev libopenblas-dev gfortran && \
     pip install psutil py7zr --break-system-packages && \
     apt-get remove -y python3-dev gcc && \
     apt-get autoremove -y --purge && \
