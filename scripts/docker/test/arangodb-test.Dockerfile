@@ -1,14 +1,20 @@
-FROM ubuntu:24.04
+FROM ubuntu:22.04
 MAINTAINER hackers@arangodb.com
 
 ARG arch
 
 RUN apt-get update && \
+    apt-get install -y wget \
+    lsb-release wget software-properties-common gnupg
+
+RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 16
+
+RUN apt-get update && \
     apt-get install -y --no-install-recommends python3 \
-    python3-pip 7zip gdb tzdata curl wget jq binutils gcc \
+    python3-pip 7zip gdb tzdata curl jq binutils gcc \
     python3-dev llvm libatomic1 net-tools \
-    libomp-16-dev liblapack-dev libopenblas-dev gfortran && \
-    pip install psutil py7zr --break-system-packages && \
+    libomp-16-dev liblapack-dev libopenblas-dev gfortran wget && \
+    pip install psutil py7zr && \
     apt-get remove -y python3-dev gcc && \
     apt-get autoremove -y --purge && \
     apt-get clean -y && \
