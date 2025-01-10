@@ -14,7 +14,8 @@ RUN apt-get update && \
     python3-pip 7zip gdb tzdata curl jq binutils gcc \
     python3-dev llvm libatomic1 net-tools \
     libomp-16-dev liblapack-dev libopenblas-dev gfortran wget && \
-    pip install psutil py7zr && \
+    pip install --upgrade pip && \
+    pip install psutil py7zr --break-system-packages && \
     apt-get remove -y python3-dev gcc && \
     apt-get autoremove -y --purge && \
     apt-get clean -y && \
