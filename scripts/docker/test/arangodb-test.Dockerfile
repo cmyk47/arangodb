@@ -1,25 +1,17 @@
-FROM ubuntu:22.04
+FROM ubuntu:23.10
 MAINTAINER hackers@arangodb.com
 
 ARG arch
 
 RUN apt-get update && \
-    apt-get install -y wget \
-    lsb-release wget software-properties-common gnupg
-
-RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 16
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3 \
-    python3-pip 7zip gdb tzdata curl jq binutils gcc \
-    python3-dev llvm libatomic1 net-tools \
-    libomp-16-dev liblapack-dev libopenblas-dev gfortran wget && \
-    pip install --upgrade pip && \
+    apt-get install -y --no-install-recommends python3 python3-pip 7zip gdb tzdata curl wget jq binutils gcc python3-dev llvm libatomic1 net-tools && \
     pip install psutil py7zr --break-system-packages && \
     apt-get remove -y python3-dev gcc && \
     apt-get autoremove -y --purge && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
+
+RUN apt-get install -y libomp-16-dev liblapack-dev libopenblas-dev gfortran
 
 RUN if [ "$arch" = "amd64" ]; then \
         VERSION=$(curl -Ls https://api.github.com/repos/prometheus/prometheus/releases/latest | jq ".tag_name" | xargs | cut -c2-) && \
